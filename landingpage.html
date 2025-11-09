@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LostLink - Lost & Found Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: linear-gradient(to bottom, #eef6ff, #ffffff); }
+  </style>
+</head>
+<body class="min-h-screen p-6">
+
+  <!-- Header -->
+  <header class="max-w-5xl mx-auto flex items-center gap-4 mb-10">
+    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg">LL</div>
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-800">LostLink</h1>
+      <p class="text-gray-600 text-sm">Connecting people to their lost and found items — easily and quickly.</p>
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main class="max-w-5xl mx-auto grid lg:grid-cols-3 gap-8">
+
+    <!-- Left: Report Form -->
+    <section class="lg:col-span-1 bg-white p-6 rounded-2xl shadow">
+      <h2 class="text-xl font-semibold mb-4 text-indigo-700">Report an Item</h2>
+
+      <div class="flex gap-3 mb-4">
+        <button id="lostBtn" class="flex-1 py-2 rounded-lg font-medium">Lost</button>
+        <button id="foundBtn" class="flex-1 py-2 rounded-lg font-medium">Found</button>
+      </div>
+
+      <form id="reportForm" class="space-y-3">
+        <input id="title" placeholder="Item title" class="w-full px-3 py-2 border rounded-lg" required>
+        <textarea id="description" placeholder="Description (where/when lost or found)" class="w-full px-3 py-2 border rounded-lg h-20 resize-none"></textarea>
+        <input id="location" placeholder="Location" class="w-full px-3 py-2 border rounded-lg">
+        <input id="contact" placeholder="Contact info (optional)" class="w-full px-3 py-2 border rounded-lg">
+        <div>
+          <label class="block text-sm mb-1 text-gray-600">Upload image (optional)</label>
+          <input type="file" id="image" accept="image/*" class="w-full">
+        </div>
+        <button type="submit" class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition">Submit Report</button>
+      </form>
+
+      <p class="text-xs text-gray-500 mt-4">
+        LostLink helps users report lost or found items with images, details, and contact info. Data is stored locally in your browser for privacy.
+      </p>
+    </section>
+
+    <!-- Right: Reports List -->
+    <section class="lg:col-span-2">
+      <div class="flex gap-3 mb-4">
+        <input id="search" placeholder="Search item, location, or description" class="flex-1 px-3 py-2 border rounded-lg">
+        <select id="filterType" class="px-3 py-2 border rounded-lg">
+          <option value="all">All</option>
+          <option value="lost">Lost</option>
+          <option value="found">Found</option>
+        </select>
+      </div>
+
+      <div id="reportsList" class="grid md:grid-cols-2 gap-4"></div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-5xl mx-auto mt-12 text-center text-sm text-gray-500">
+    <p>LostLink ©️ 2025 — a simple lost & found system built with HTML, CSS & JavaScript.</p>
+  </footer>
+
+  <script>
+    let currentType = localStorage.getItem('currentType') || 'lost';
+    const reports = JSON.parse(localStorage.getItem('lostlink_reports') || '[]');
+
+    const form = document.getElementById('reportForm');
+    const lostBtn = document.getElementById('lostBtn');
+    const foundBtn = document.getElementById('foundBtn');
+    const list = document.getElementById('reportsList');
+    const searchInput = document.getElementById('search');
+    const filterType = document.getElementById('filterType');
+
+    // --- Type switcher ---
+    function setActive(type) {
+      currentType = type;
+      localStorage.setItem('currentType', type);
+
+      if (type === 'lost') {
+        lostBtn.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white font-medium';
+        foundBtn.className = 'flex-1 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium';
+      } else {
+        foundBtn.className = 'flex-1 py-2 rounded-lg bg-green-600 text-white font-medium';
+        lostBtn.className = 'flex-1 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium';
+      }
+    }
+
+    lostBtn.onclick = () => setActive('lost');
+    foundBtn.onclick = () => setActive('found');
+    setActive(currentType);
+
+    // --- Form submission ---
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const reader = new FileReader();
+      const file = document.getElementById('image').files[0];
+      reader.onloadend = () => {
+        const report = {
+          id: Date.now(),
+          type: currentType,
+          title: document.getElementById('title').value.trim(),
+          description: document.getElementById('description').value.trim(),
+          location: document.getElementById('location').value.trim(),
+          contact: document.getElementById('contact').value.trim(),
+          image: reader.result || null,
+          timestamp: new Date().toLocaleString(),
+        };
+        reports.unshift(report);
+        localStorage.setItem('lostlink_reports', JSON.stringify(reports));
+        renderReports();
+        form.reset();
+        alert('✅ Report submitted successfully!');
+      };
+      if (file) reader.readAsDataURL(file);
+      else reader.onloadend();
+    };
+
+    // --- Render reports ---
+    function renderReports() {
+      list.innerHTML = '';
+      const query = searchInput.value.toLowerCase();
+      const typeFilter = filterType.value;
+
+      const filtered = reports.filter(r =>
+        (typeFilter === 'all' || r.type === typeFilter) &&
+        (r.title.toLowerCase().includes(query) ||
+         r.description.toLowerCase().includes(query) ||
+         r.location.toLowerCase().includes(query))
+      );
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="p-6 bg-white rounded-xl shadow text-gray-500 text-center">No reports found.</div>';
+        return;
+      }
+
+      filtered.forEach(r => {
+        const card = document.createElement('div');
+        card.className = `rounded-2xl p-4 shadow hover:shadow-lg transition ${
+          r.type === 'lost' ? 'bg-red-50' : 'bg-green-50'
+        }`;
+        card.innerHTML = `
+          <div class="flex gap-3">
+            <div class="w-24 h-24 border rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+              ${
+                r.image
+                  ? `<img src="${r.image}" class="w-full h-full object-cover">`
+                  : '<span class="text-gray-400 text-sm">No image</span>'
+              }
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-lg">${r.title}</h3>
+              <p class="text-sm text-gray-500 mb-1">${r.type === 'lost' ? '🟥 Lost' : '🟩 Found'} • ${r.timestamp}</p>
+              <p class="text-sm text-gray-700 mb-1">${r.description || '(no description)'}</p>
+              <p class="text-sm text-gray-600"><strong>Location:</strong> ${r.location || '—'}</p>
+              <p class="text-sm text-gray-600"><strong>Contact:</strong> ${r.contact || '—'}</p>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    searchInput.oninput = renderReports;
+    filterType.onchange = renderReports;
+
+    renderReports();
+  </script>
+
+</body>
+</html>
