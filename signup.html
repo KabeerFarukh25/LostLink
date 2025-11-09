@@ -75,50 +75,7 @@
     <p class="text-xs text-gray-400 text-center mt-6">LostLink ©️ 2025 — Secure login system prototype.</p>
   </div>
 
-  <script>
-    const loginTab = document.getElementById('loginTab');
-    const signupTab = document.getElementById('signupTab');
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    const backToLogin = document.getElementById('backToLogin');
-
-    // Switch between login and signup forms
-    function showLogin() {
-      loginForm.classList.remove('hidden');
-      signupForm.classList.add('hidden');
-      loginTab.classList.add('bg-lostlinkBlue', 'text-white');
-      signupTab.classList.remove('bg-lostlinkBlue', 'text-white');
-      signupTab.classList.add('text-gray-700');
-    }
-
-    function showSignup() {
-      signupForm.classList.remove('hidden');
-      loginForm.classList.add('hidden');
-      signupTab.classList.add('bg-lostlinkBlue', 'text-white');
-      loginTab.classList.remove('bg-lostlinkBlue', 'text-white');
-      loginTab.classList.add('text-gray-700');
-    }
-
-    loginTab.onclick = showLogin;
-    signupTab.onclick = showSignup;
-    backToLogin.onclick = (e) => { e.preventDefault(); showLogin(); };
-
-    // Default state: show login
-    showLogin();
-
-    // Demo form handlers (can connect to backend later)
-    loginForm.onsubmit = (e) => {
-      e.preventDefault();
-      alert('✅ Logged in successfully!');
-      window.location.href = "index.html"; // redirect to main portal
-    };
-
-    signupForm.onsubmit = (e) => {
-      e.preventDefault();
-      alert('✅ Account created successfully!');
-      showLogin();
-    };
-  </script>
+  <script type="module" src="js/auth/auth.js"></script>
 
 </body>
 </html>
